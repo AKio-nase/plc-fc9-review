@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FC9 自动模块RFID 修复方案</title>
+<script src="./_shared/js/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #f8f9fb;
+  --bg2: #ffffff;
+  --ink: #1a2332;
+  --muted: #6b7280;
+  --rule: #e2e8f0;
+  --accent: #0b5394;
+  --accent2: #cc0000;
+  --accent3: #38761d;
+  --warn: #e69138;
+  --code-bg: #f1f5f9;
+  --code-border: #cbd5e1;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: "Microsoft YaHei", "微软雅黑", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ===== 封面 ===== */
+.hero {
+  background: linear-gradient(135deg, #0b5394 0%, #0c3a6e 100%);
+  color: #fff;
+  padding: 60px 0 50px;
+  text-align: center;
+}
+.hero h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+.hero .subtitle {
+  font-size: 16px;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+.hero .meta {
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+/* ===== 目录 ===== */
+.toc {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 24px 28px;
+  margin: 32px 0;
+}
+.toc h2 {
+  font-size: 18px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 6px;
+}
+.toc ol {
+  padding-left: 20px;
+}
+.toc li {
+  margin-bottom: 6px;
+}
+.toc a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.toc a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* ===== 章节 ===== */
+section {
+  background: var(--bg2);
+  margin: 28px 0;
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+section > .section-header {
+  background: var(--accent);
+  color: #fff;
+  padding: 14px 24px;
+}
+section > .section-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+}
+section > .section-body {
+  padding: 24px;
+}
+
+h3 {
+  font-size: 16px;
+  color: var(--accent);
+  margin: 20px 0 10px;
+  padding-left: 12px;
+  border-left: 4px solid var(--accent);
+}
+
+h4 {
+  font-size: 14px;
+  color: var(--ink);
+  margin: 16px 0 8px;
+}
+
+p { margin-bottom: 10px; }
+
+/* ===== 表格 ===== */
+.table-wrap {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 600px;
+  margin: 16px 0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th {
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+tr:nth-child(even) td {
+  background: #f7fafc;
+}
+
+/* ===== 问题/修复标签 ===== */
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tag-critical { background: #fde2e2; color: #cc0000; }
+.tag-medium   { background: #fef3e2; color: #e69138; }
+.tag-low      { background: #e8f5e9; color: #38761d; }
+.tag-fix      { background: #e3f2fd; color: #0b5394; }
+
+/* ===== 代码块 ===== */
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+.code-block .label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-family: "Microsoft YaHei", sans-serif;
+}
+.code-block .del {
+  color: var(--accent2);
+  text-decoration: line-through;
+}
+.code-block .add {
+  color: var(--accent3);
+  font-weight: 600;
+}
+.code-block .comment {
+  color: var(--muted);
+}
+
+/* ===== 图片 ===== */
+figure.diagram {
+  margin: 20px 0;
+  text-align: center;
+}
+figure.diagram img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+figure.diagram figcaption {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+/* ===== 提示框 ===== */
+.callout {
+  border-left: 4px solid;
+  border-radius: 0 6px 6px 0;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+.callout-warn {
+  border-color: var(--warn);
+  background: #fff8ed;
+}
+.callout-danger {
+  border-color: var(--accent2);
+  background: #fef2f2;
+}
+.callout-info {
+  border-color: var(--accent);
+  background: #eff6ff;
+}
+.callout-success {
+  border-color: var(--accent3);
+  background: #f0fdf4;
+}
+.callout-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.callout-warn .callout-title { color: var(--warn); }
+.callout-danger .callout-title { color: var(--accent2); }
+.callout-info .callout-title { color: var(--accent); }
+.callout-success .callout-title { color: var(--accent3); }
+
+/* ===== 流程图 ===== */
+.mermaid {
+  text-align: center;
+  margin: 20px 0;
+}
+
+/* ===== 概览卡片 ===== */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 16px 0;
+}
+.overview-card {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 16px;
+  border-left: 4px solid var(--accent);
+}
+.overview-card.critical { border-left-color: var(--accent2); }
+.overview-card.medium { border-left-color: var(--warn); }
+.overview-card.low { border-left-color: var(--accent3); }
+.overview-card h4 {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.overview-card p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .overview-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== 页脚 ===== */
+footer {
+  text-align: center;
+  padding: 30px 0;
+  color: var(--muted);
+  font-size: 13px;
+  border-top: 1px solid var(--rule);
+  margin-top: 40px;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 封面 ===== -->
+<div class="hero">
+  <div class="container">
+    <h1>FC9 自动模块RFID 修复方案</h1>
+    <div class="subtitle">4工位转盘扫码系统 · 8项问题诊断与修复 · TIA Portal PLC程序分析</div>
+    <div class="meta">基于任务要求PDF与 allll6.pdf 程序导出的对比分析</div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ===== 目录 ===== -->
+<div class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#overview">问题概述</a></li>
+    <li><a href="#fix1">修复一：架构重构（解决约束违规）</a></li>
+    <li><a href="#fix2">修复二：网络9工位选择互斥条件</a></li>
+    <li><a href="#fix3">修复三：网络13补充Done复位</a></li>
+    <li><a href="#fix4">修复四：暂停逻辑优化</a></li>
+    <li><a href="#fix5">修复五：网络10补足逻辑完善</a></li>
+    <li><a href="#fix6">修复六：未读取到正常件指示灯不闪烁</a></li>
+    <li><a href="#fix7">修复七：读取指示灯置位时机错误</a></li>
+    <li><a href="#fix8">修复八：监控指示灯手动模式失效</a></li>
+    <li><a href="#flow">修复后完整执行流程</a></li>
+    <li><a href="#priority">修改优先级建议</a></li>
+  </ol>
+</div>
+
+<!-- ===== 问题概述 ===== -->
+<section id="overview">
+  <div class="section-header"><h2>一、问题概述</h2></div>
+  <div class="section-body">
+
+    <p>通过对任务要求PDF（<strong>项目二-任务内容</strong>）与PLC程序导出（<strong>allll6.pdf</strong>）的逐网络对比分析，FC9（自动模块RFID）及与之联动的 FC5、OB1 共发现 <strong>8个逻辑问题</strong>，其中 5 个在 FC9 本身，按严重程度分类如下：</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50px">序号</th>
+          <th>问题描述</th>
+          <th style="width:120px">修改位置</th>
+          <th style="width:80px">严重程度</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>FC9违规操作 writedata / readdata / 数据读取，违反任务约束</td>
+          <td>OB1 + FC9网络2-7</td>
+          <td><span class="tag tag-critical">严重</span></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>网络9工位选择分支缺少互斥条件，多工位同时&gt;0.0时MOVE覆盖</td>
+          <td>FC9网络9</td>
+          <td><span class="tag tag-critical">严重</span></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>网络13（步骤3&rarr;4）未复位Done标志</td>
+          <td>FC9网络13</td>
+          <td><span class="tag tag-medium">中等</span></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>暂停逻辑复位writebtn/readbtn，恢复后可能死锁</td>
+          <td>FC9网络16-17</td>
+          <td><span class="tag tag-medium">中等</span></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>网络10补足逻辑需确认计数器递增正确</td>
+          <td>FC9网络10</td>
+          <td><span class="tag tag-low">低</span></td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>未读取到正常件指示灯不闪烁（S/R线圈导致常亮）</td>
+          <td>FC5网络28</td>
+          <td><span class="tag tag-critical">严重</span></td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td>读取指示灯置位时机错误（读取完成后才亮，非读取时亮）</td>
+          <td>FC9网络12-13</td>
+          <td><span class="tag tag-medium">中等</span></td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td>7个监控指示灯只在自动模式工作，手动模式不更新</td>
+          <td>OB1 + FC5</td>
+          <td><span class="tag tag-critical">严重</span></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="overview-grid">
+      <div class="overview-card critical">
+        <h4><span class="tag tag-critical">严重</span> 约束违规</h4>
+        <p>FC9网络2-7直接操作writedata、readdata、数据读取，违反任务要求"除基础程序外不允许其他程序包含这三个量"</p>
+      </div>
+      <div class="overview-card critical">
+        <h4><span class="tag tag-critical">严重</span> 写入覆盖</h4>
+        <p>网络9的4个并联分支仅有&gt;0.0判断，缺少&lt;=0.0互斥条件，多工位同时有效时MOVE互相覆盖</p>
+      </div>
+      <div class="overview-card medium">
+        <h4><span class="tag tag-medium">中等</span> Done未复位</h4>
+        <p>网络13步骤3&rarr;4转换时未复位Done，虽步骤4靠TON驱动但不规范</p>
+      </div>
+      <div class="overview-card medium">
+        <h4><span class="tag tag-medium">中等</span> 暂停死锁</h4>
+        <p>网络17暂停时复位触发信号，步骤1或3中途暂停后恢复可能卡死</p>
+      </div>
+      <div class="overview-card critical">
+        <h4><span class="tag tag-critical">严重</span> 闪烁灯常亮</h4>
+        <p>网络28用S线圈+闪烁时钟串联，闪烁时钟=0时无R指令，灯一旦亮就不灭</p>
+      </div>
+      <div class="overview-card medium">
+        <h4><span class="tag tag-medium">中等</span> 读取灯时机</h4>
+        <p>S读取指示灯在网络13（读取Done后）而非网络12（读取开始时），与写入灯不一致</p>
+      </div>
+      <div class="overview-card critical">
+        <h4><span class="tag tag-critical">严重</span> 监控灯失效</h4>
+        <p>FC5只在自动模式调用，7个监控指示灯在手动模式下不更新，任务要求"包含在手动时"</p>
+      </div>
+    </div>
+
+    <h3>任务要求（界面与约束条件）</h3>
+    <figure class="diagram">
+      <img src="assets/task_req_2.png" alt="任务要求：边缘设备手动界面，右侧为 RFID 数据块的使用约束">
+      <figcaption>手动界面：伺服旋转、扫码、RFID 读写三个功能区，右侧框内是 RFID 数据块的使用约束</figcaption>
+    </figure>
+
+    <figure class="diagram">
+      <img src="assets/task_req_3.png" alt="任务要求：边缘设备自动界面">
+      <figcaption>自动界面：四个工位的扫码内容、读写内容与各类指示灯，程序要驱动的对象都在这一屏</figcaption>
+    </figure>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">关键约束</div>
+      <p>"RFID数据块中的 writedata、readdata 以及数据读取，除了PPT上的基础程序外，不允许其他程序描述包含这三个量。"</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 修复一 ===== -->
+<section id="fix1">
+  <div class="section-header"><h2>二、修复一：架构重构（解决约束违规）</h2></div>
+  <div class="section-body">
+
+    <h3>问题分析</h3>
+    <p>FC9网络2-7直接操作了 <code>writedata</code>、<code>readdata</code>、<code>数据读取</code> 三个受限变量。根因是 OB1 中 FC3 的调用条件为 <code>手动标识符 AND NOT自动读写rfid</code>，导致自动模式下FC3不被调用，FC9被迫复制了FC3的全部RFID基础逻辑。</p>
+
+    <figure class="diagram">
+      <img src="assets/fc9_networks_2_7.png" alt="FC9网络2-7：FB_RFID调用、读写设置、FC7/FC8转换">
+      <figcaption>FC9 网络2-7：违规复制了FC3的FB_RFID调用、读写设置及FC7/FC8转换逻辑</figcaption>
+    </figure>
+
+    <figure class="diagram">
+      <img src="assets/fc3_basic.png" alt="FC3基础程序：网络1-2">
+      <figcaption>FC3 基础程序（网络1-2）：FB_RFID调用与读取设置 — 这是任务允许的唯一操作writedata/readdata的位置</figcaption>
+    </figure>
+
+    <h3>修改方案</h3>
+
+    <h4>步骤1：修改OB1中FC3的调用条件</h4>
+    <div class="code-block">
+<span class="label">OB1 网络2 — FC3调用条件修改</span>
+<span class="comment">// 原逻辑：FC3仅在手动模式调用</span>
+<span class="del">[手动标识符]──[/自动读写rfid]──[FC3]</span>
+
+<span class="comment">// 改为：FC3在手动和自动模式都调用</span>
+<span class="add">[/集成作业标识符]──[总开关按钮]──[FC3]</span>
+
+<span class="comment">// 即FC3调用条件 = NOT集成作业标识符 AND 总开关按钮</span>
+<span class="comment">// 与FC2、FC5+FC9的调用条件平级</span>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">为什么这样改？</div>
+      <p>FC3在手动和自动模式都执行后，FC9只需通过 <code>writebtn</code> / <code>readbtn</code> 触发FC3的逻辑，不再需要自己操作 writedata/readdata/数据读取。FC3的FB_RFID实例（DB17）会响应这些触发信号完成实际读写。</p>
+    </div>
+
+    <h4>步骤2：删除FC9网络2-7</h4>
+    <p>以下网络全部删除（由FC3处理）：</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:80px">网络</th><th>内容</th><th>删除原因</th></tr></thead>
+      <tbody>
+        <tr><td>网络2</td><td>FB_RFID调用（DB47实例）</td><td>FC3网络1已有</td></tr>
+        <tr><td>网络3</td><td>读取设置（FILL_BLK readdata等）</td><td>FC3网络2已有</td></tr>
+        <tr><td>网络4</td><td>Done复位（R Execute等）</td><td>FC3网络3已有</td></tr>
+        <tr><td>网络5</td><td>写入设置（FILL_BLK writedata等）</td><td>FC3网络4已有</td></tr>
+        <tr><td>网络6</td><td>FC8读取转换（readdata&rarr;数据读取）</td><td>FC3中已有FC8调用</td></tr>
+        <tr><td>网络7</td><td>FC7写入转换（数据写入&rarr;writedata）</td><td>FC3中已有FC7调用</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4>步骤3：修改FC9中Done引用</h4>
+    <p>由于Done现在来自FC3的FB_RFID实例（DB17），需要将FC9中的实例引用从DB47改为DB17：</p>
+    <div class="code-block">
+<span class="label">FC9 网络11、13 — Done和Execute引用修改</span>
+<span class="del">"FB_RFID_DB_1".Done      // DB47实例（已删除）</span>
+<span class="del">"FB_RFID_DB_1".Execute   // DB47实例（已删除）</span>
+
+<span class="add">"FB_RFID_DB".Done        // DB17实例（FC3使用的实例）</span>
+<span class="add">"FB_RFID_DB".Execute     // DB17实例（FC3使用的实例）</span>
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-title">注意事项</div>
+      <p>FC3网络3的Done复位条件是 <code>Done(NO常开)</code>，会在Done为True的下一个扫描周期自动复位Execute和触发信号。但FC9仍需在步骤转换时显式 <code>R Done</code>，确保步骤转换可靠。</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 修复二 ===== -->
+<section id="fix2">
+  <div class="section-header"><h2>三、修复二：网络9工位选择互斥条件</h2></div>
+  <div class="section-body">
+
+    <h3>问题分析</h3>
+    <p>这是"写入时不会一个个写入"的<strong>根本原因</strong>。网络9的4个工位选择分支可能只有简单的 <code>&gt;0.0</code> 并联判断，缺少 <code>&lt;=0.0</code> 互斥条件。</p>
+
+    <figure class="diagram">
+      <img src="assets/fc9_networks_9_10.png" alt="FC9网络9-10：工位选择与补足逻辑">
+      <figcaption>FC9 网络9-10：工位选择分支（上）与补足逻辑（下）</figcaption>
+    </figure>
+
+    <h4>原逻辑（有缺陷）</h4>
+    <div class="code-block">
+<span class="label">网络9 原逻辑 — 4个分支并联，无互斥</span>
+       ┌──[工位1&gt;0.0]──[MOVE 工位1→当前写入值]──┐
+       │                                        │
+[条件]─┼──[工位2&gt;0.0]──[MOVE 工位2→当前写入值]──┼──[S writebtn]──[MOVE 1→步骤]
+       │                                        │
+       ├──[工位3&gt;0.0]──[MOVE 工位3→当前写入值]──┤
+       │                                        │
+       └──[工位4&gt;0.0]──[MOVE 工位4→当前写入值]──┘
+
+<span class="comment">// 问题：多工位同时&gt;0.0时，MOVE依次执行，后面的覆盖前面的</span>
+<span class="comment">// 最终 当前写入值 = 最后一个&gt;0.0工位的值</span>
+    </div>
+
+    <h4>连锁影响</h4>
+    <p>网络11的清零逻辑是 <code>工位扫码内容 == 当前写入值 → MOVE 0.0</code>。由于MOVE覆盖：</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:60px">循环</th><th>当前写入值</th><th>网络11清零结果</th><th>问题</th></tr></thead>
+      <tbody>
+        <tr><td>第1次</td><td>工位4的值（被覆盖）</td><td>只清零工位4</td><td>工位1/2/3未清零</td></tr>
+        <tr><td>第2次</td><td>工位3的值（工位4已清零）</td><td>只清零工位3</td><td>工位1/2未清零</td></tr>
+        <tr><td>第3次</td><td>工位2的值</td><td>只清零工位2</td><td>工位1未清零</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">严重后果</div>
+      <p>写入顺序错误（4&rarr;3&rarr;2而非1&rarr;2&rarr;3），且如果两个工位扫码内容恰好相同，会同时清零多个工位导致跳过某些工位的写入。</p>
+    </div>
+
+    <h3>修改方案</h3>
+    <p>将网络9的4个并联分支改为<strong>优先级条件分支</strong>，每个分支增加前面工位的 <code>&lt;=0.0</code> 互斥条件：</p>
+
+    <div class="code-block">
+<span class="label">网络9 修复后 — 优先级条件分支</span>
+[步骤==0]──[NOT自动rfid暂停标志]──[产品计数&lt;3]
+    │
+    ├─[工位1扫码内容 &gt; 0.0]
+    │   └─[MOVE 工位1扫码内容 → 当前写入值]
+    │
+    ├─[工位1扫码内容 ≤ 0.0]──[工位2扫码内容 &gt; 0.0]
+    │   └─[MOVE 工位2扫码内容 → 当前写入值]
+    │
+    ├─[工位1 ≤ 0.0]──[工位2 ≤ 0.0]──[工位3扫码内容 &gt; 0.0]
+    │   └─[MOVE 工位3扫码内容 → 当前写入值]
+    │
+    └─[工位1 ≤ 0.0]──[工位2 ≤ 0.0]──[工位3 ≤ 0.0]──[工位4扫码内容 &gt; 0.0]
+        └─[MOVE 工位4扫码内容 → 当前写入值]
+
+<span class="comment">// 后续操作（与分支并联，任一分支导通即执行）</span>
+[MOVE 当前写入值 → 数据写入]
+[S writebtn]
+[S 写入指示灯]
+[MOVE 1 → 自动读写步骤]
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">修复效果</div>
+      <p>每次只选择<strong>第一个</strong> &gt;0.0 的工位，写入后在网络11中清零该工位扫码内容，下次循环选择下一个工位，实现真正的"一个个写入"。</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 修复三 ===== -->
+<section id="fix3">
+  <div class="section-header"><h2>四、修复三：网络13补充Done复位</h2></div>
+  <div class="section-body">
+
+    <h3>问题分析</h3>
+    <p>网络13（步骤3&rarr;4）的执行条件是 <code>步骤==3 AND Done</code>，执行后未复位Done。虽然网络14（步骤4&rarr;0）会复位Done，但在步骤4期间Done保持为True可能导致其他依赖Done的逻辑误触发。</p>
+
+    <figure class="diagram">
+      <img src="assets/fc9_networks_11_13.png" alt="FC9网络11-13：步骤转换与清零逻辑">
+      <figcaption>FC9 网络11-13：步骤1&rarr;2（清零）、步骤2&rarr;3（3秒延时）、步骤3&rarr;4（读取完成）</figcaption>
+    </figure>
+
+    <h4>Done复位位置对照</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:100px">步骤转换</th><th>网络</th><th>是否复位Done</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td>步骤1&rarr;2</td><td>网络11</td><td>R Done</td><td><span class="tag tag-low">已复位</span></td></tr>
+        <tr><td>步骤2&rarr;3</td><td>网络12</td><td>R Done</td><td><span class="tag tag-low">已复位</span></td></tr>
+        <tr><td>步骤3&rarr;4</td><td>网络13</td><td>—</td><td><span class="tag tag-critical">缺失</span></td></tr>
+        <tr><td>步骤4&rarr;0</td><td>网络14</td><td>R Done</td><td><span class="tag tag-low">已复位</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>修改方案</h3>
+    <p>在网络13的输出指令列表中添加 <code>R Done</code>：</p>
+
+    <div class="code-block">
+<span class="label">网络13 修复后</span>
+[步骤==3]──["FB_RFID_DB".Done]
+    │
+    ├─[R readbtn]
+    ├─[R "FB_RFID_DB".Execute]
+    ├─[R "FB_RFID_DB".Done]          <span class="add">← 新增</span>
+    ├─[S 读取指示灯]
+    ├─[MOVE 数据读取 → 读取正常产品1/2/3]  <span class="comment">// 根据产品计数选择</span>
+    └─[MOVE 4 → 自动读写步骤]
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 修复四 ===== -->
+<section id="fix4">
+  <div class="section-header"><h2>五、修复四：暂停逻辑优化</h2></div>
+  <div class="section-body">
+
+    <h3>问题分析</h3>
+    <p>网络17在暂停时复位了 writebtn、readbtn、指示灯。如果暂停发生在步骤1（等待写入Done）或步骤3（等待读取Done），操作被中断，恢复后可能卡死。</p>
+
+    <figure class="diagram">
+      <img src="assets/fc9_networks_16_17.png" alt="FC9网络16-17：暂停toggle与复位逻辑">
+      <figcaption>FC9 网络16-17：暂停toggle切换（上）与暂停时复位操作（下）</figcaption>
+    </figure>
+
+    <h4>两个独立的暂停变量</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:160px">变量</th><th>触发方式</th><th>控制对象</th></tr></thead>
+      <tbody>
+        <tr><td>暂停写入和读取</td><td>急停按钮</td><td>FB_RFID的EN使能</td></tr>
+        <tr><td>自动rfid暂停标志</td><td>用户暂停按钮（toggle）</td><td>步骤逻辑条件</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-title">状态不一致风险</div>
+      <p>用户按暂停按钮只影响步骤逻辑（网络8-15），但FB_RFID仍在运行（EN未断开），可能导致FB_RFID完成操作但步骤不推进，恢复后状态不一致。</p>
+    </div>
+
+    <h3>修改方案（推荐方案A）</h3>
+    <p><strong>方案A：暂停时只冻结步骤推进，不中断当前操作</strong></p>
+
+    <p>删除网络17的全部复位指令，改为在每个步骤转换条件中增加 <code>NOT自动rfid暂停标志</code> 判断：</p>
+
+    <div class="code-block">
+<span class="label">各网络条件修改</span>
+<span class="comment">// 网络9（步骤0→选工位）</span>
+[步骤==0]──<span class="add">[NOT自动rfid暂停标志]</span>──[产品计数&lt;3]──(后续工位选择)
+
+<span class="comment">// 网络11（步骤1→2）</span>
+[步骤==1]──<span class="add">[NOT自动rfid暂停标志]</span>──["FB_RFID_DB".Done]──(后续操作)
+
+<span class="comment">// 网络12（步骤2→3）</span>
+[步骤==2]──<span class="add">[NOT自动rfid暂停标志]</span>──[TON T#3s]──(后续操作)
+
+<span class="comment">// 网络13（步骤3→4）</span>
+[步骤==3]──<span class="add">[NOT自动rfid暂停标志]</span>──["FB_RFID_DB".Done]──(后续操作)
+
+<span class="comment">// 网络14（步骤4→0）</span>
+[步骤==4]──<span class="add">[NOT自动rfid暂停标志]</span>──[TON T#3s]──(后续操作)
+    </div>
+
+    <p>网络16（暂停toggle）保留不变：</p>
+    <div class="code-block">
+<span class="label">网络16 保留不变</span>
+[P 暂停读写]──[toggle 自动rfid暂停标志]
+    </div>
+
+    <p><strong>删除网络17</strong>（不再需要复位操作）。</p>
+
+    <div class="callout callout-success">
+      <div class="callout-title">方案A效果</div>
+      <p>暂停时当前正在执行的RFID操作正常完成（FB_RFID不受影响），步骤不推进（转换条件不满足），恢复后从当前步骤继续执行。完全满足任务要求"暂停时需保持当前步骤和产品计数"。</p>
+    </div>
+
+    <h3>备选方案B</h3>
+    <p>如果必须复位触发信号，需同时将步骤回0：</p>
+    <div class="code-block">
+<span class="label">网络17 修改为方案B</span>
+[自动rfid暂停标志]
+    ├─[R writebtn]
+    ├─[R readbtn]
+    ├─[R 写入指示灯]
+    ├─[R 读取指示灯]
+    └─[MOVE 0 → 自动读写步骤]   <span class="add">← 回到步骤0</span>
+    </div>
+    <p>恢复后从步骤0重新开始，由于工位选择逻辑会跳过 ≤0.0 的工位（已清零），实际不会重复写入。</p>
+
+  </div>
+</section>
+
+<!-- ===== 修复五 ===== -->
+<section id="fix5">
+  <div class="section-header"><h2>六、修复五：网络10补足逻辑完善</h2></div>
+  <div class="section-body">
+
+    <h3>问题分析</h3>
+    <p>网络10的补足逻辑（所有工位≤0.0时写1001/1002/1003）需确认补足计数器的递增和当前写入值的计算正确。</p>
+
+    <h3>确认/修改方案</h3>
+    <div class="code-block">
+<span class="label">网络10 应为</span>
+[步骤==0]──[NOT自动rfid暂停标志]──[产品计数&lt;3]
+──[工位1≤0.0]──[工位2≤0.0]──[工位3≤0.0]──[工位4≤0.0]
+    │
+    ├─[ADD 补足计数 + 1001 → 当前写入值]
+    ├─[INC 补足计数]                     <span class="comment">// 补足计数+1</span>
+    ├─[MOVE 当前写入值 → 数据写入]
+    ├─[S writebtn]
+    ├─[S 写入指示灯]
+    └─[MOVE 1 → 自动读写步骤]
+    </div>
+
+    <h4>补足计数执行序列</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:80px">次数</th><th>补足计数（执行前）</th><th>计算</th><th>当前写入值</th><th>补足计数（执行后）</th></tr></thead>
+      <tbody>
+        <tr><td>第1次</td><td>0</td><td>0 + 1001</td><td>1001</td><td>1</td></tr>
+        <tr><td>第2次</td><td>1</td><td>1 + 1001</td><td>1002</td><td>2</td></tr>
+        <tr><td>第3次</td><td>2</td><td>2 + 1001</td><td>1003</td><td>3</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">关于数据写入</div>
+      <p><code>数据写入</code> 是FC7的输入（FC3中将 <code>数据写入</code> 转换为 writedata）。FC9设置 <code>数据写入</code> 是允许的 — 约束禁止的是直接操作 writedata/readdata/数据读取，不包括 <code>数据写入</code>。</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 修复六 ===== -->
+<section id="fix6">
+  <div class="section-header"><h2>七、修复六：未读取到正常件指示灯不闪烁</h2></div>
+  <div class="section-body">
+
+    <h3>问题分析</h3>
+    <p>这是指示灯中最严重的bug。任务要求"未读取到正常件警示灯"在3个产品均未读取到正常件时<strong>闪烁</strong>，但实际实现是<strong>常亮</strong>。</p>
+
+    <figure class="diagram">
+      <img src="assets/fc9_networks_14_15.png" alt="FC5网络27-28：闪烁时钟与未读取到正常件指示灯">
+      <figcaption>FC5 网络27-28：闪烁时钟生成（上）与未读取到正常件指示灯控制（下）</figcaption>
+    </figure>
+
+    <h4>原逻辑（有缺陷）</h4>
+    <div class="code-block">
+<span class="label">网络28 原逻辑 — S/R线圈导致常亮</span>
+<span class="comment">// S分支（置位）</span>
+[产品1≤0.0]──[产品2≤0.0]──[产品3≤0.0]──[闪烁时钟]──(S) 未读取到正常件指示灯
+
+<span class="comment">// R分支（复位）— 3个并联</span>
+[产品1>0.0]──(R) 未读取到正常件指示灯
+[产品2>0.0]──(R) 未读取到正常件指示灯
+[产品3>0.0]──(R) 未读取到正常件指示灯
+    </div>
+
+    <h4>为什么不会闪烁？</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:160px">闪烁时钟状态</th><th>所有产品≤0.0?</th><th>S执行?</th><th>R执行?</th><th>灯状态</th></tr></thead>
+      <tbody>
+        <tr><td>闪烁时钟=1</td><td>是</td><td>是 → 灯=1</td><td>否</td><td><span class="tag tag-low">ON</span></td></tr>
+        <tr><td>闪烁时钟=0</td><td>是</td><td>否</td><td>否</td><td><span class="tag tag-warn" style="background:#fef3e2;color:#e69138">保持ON</span></td></tr>
+        <tr><td>闪烁时钟=1</td><td>是</td><td>是（但已是1）</td><td>否</td><td><span class="tag tag-low">ON</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">根本原因</div>
+      <p>S（置位）线圈只在条件满足时把灯设为1，但<strong>闪烁时钟=0时没有R指令把灯复位为0</strong>。S/R触发器一旦置位就保持，导致灯常亮而非闪烁。R分支只在产品&gt;0.0时才执行，无法配合闪烁时钟产生闪烁效果。</p>
+    </div>
+
+    <h3>修改方案</h3>
+
+    <h4>方案A（推荐）：S线圈改为=（赋值）指令</h4>
+    <div class="code-block">
+<span class="label">网络28 修复方案A — 改用赋值指令</span>
+<span class="comment">// 将S线圈改为=（赋值）指令</span>
+[产品1≤0.0]──[产品2≤0.0]──[产品3≤0.0]──[闪烁时钟]──<span class="add">(=)</span> 未读取到正常件指示灯
+
+<span class="comment">// R分支保持不变</span>
+[产品1>0.0]──(R) 未读取到正常件指示灯
+[产品2>0.0]──(R) 未读取到正常件指示灯
+[产品3>0.0]──(R) 未读取到正常件指示灯
+
+<span class="comment">// =指令每个扫描周期都更新：</span>
+<span class="comment">// 闪烁时钟=1 → 灯=1（亮）</span>
+<span class="comment">// 闪烁时钟=0 → 灯=0（灭）</span>
+<span class="comment">// → 产生1Hz闪烁效果</span>
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">方案A原理</div>
+      <p><code>=</code>（赋值）指令每个扫描周期都根据条件更新输出值。当闪烁时钟=1时灯亮，闪烁时钟=0时灯灭，自然产生闪烁。R分支保留，确保产品恢复正常时灯立即熄灭。</p>
+    </div>
+
+    <h4>方案B：增加闪烁时钟=0时的R指令</h4>
+    <div class="code-block">
+<span class="label">网络28 修复方案B — 增加R分支</span>
+<span class="comment">// 原S分支保持不变</span>
+[产品1≤0.0]──[产品2≤0.0]──[产品3≤0.0]──[闪烁时钟]──(S) 未读取到正常件指示灯
+
+<span class="comment">// 新增R分支：闪烁时钟=0时复位</span>
+[产品1≤0.0]──[产品2≤0.0]──[产品3≤0.0]──<span class="add">[/闪烁时钟]</span>──(R) 未读取到正常件指示灯
+
+<span class="comment">// 原R分支保持不变</span>
+[产品1>0.0]──(R) 未读取到正常件指示灯
+[产品2>0.0]──(R) 未读取到正常件指示灯
+[产品3>0.0]──(R) 未读取到正常件指示灯
+    </div>
+
+    <p>方案B中 <code>/闪烁时钟</code> 是常闭触点（NC），当闪烁时钟=0时导通，执行R复位灯。</p>
+
+  </div>
+</section>
+
+<!-- ===== 修复七 ===== -->
+<section id="fix7">
+  <div class="section-header"><h2>八、修复七：读取指示灯置位时机错误</h2></div>
+  <div class="section-body">
+
+    <h3>问题分析</h3>
+    <p>写入指示灯在<strong>写入开始时</strong>（步骤0→1）置位，但读取指示灯在<strong>读取完成后</strong>（步骤3→4，Done信号）才置位。两者逻辑不一致。</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:100px">指示灯</th><th>置位(S)时机</th><th>复位(R)时机</th><th>亮灯期间</th><th>是否正确</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>写入指示灯</td>
+          <td>网络9/10（步骤0→1，写入开始）</td>
+          <td>网络12（步骤2→3，写入Done后3秒）</td>
+          <td>写入中 + 3秒</td>
+          <td><span class="tag tag-low">正确</span></td>
+        </tr>
+        <tr>
+          <td>读取指示灯</td>
+          <td>网络13（步骤3→4，读取Done）</td>
+          <td>网络14（步骤4→0，读取Done后3秒）</td>
+          <td>读取完成后3秒</td>
+          <td><span class="tag tag-critical">错误</span></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h4>时序对比</h4>
+    <div class="code-block">
+<span class="label">写入指示灯时序（正确）</span>
+步骤0: S写入指示灯 ──────────────────── 步骤2: R写入指示灯
+       ↑ 写入开始                              ↑ 写入Done+3s
+       └──────── 灯亮 ────────────────────────┘
+
+<span class="label">读取指示灯时序（错误）</span>
+步骤2: S readbtn ─── 步骤3: Done ─── S读取指示灯 ─── 步骤4: R读取指示灯
+       ↑ 读取开始         ↑ 读取完成      ↑ 灯才亮          ↑ 3s后灭
+                           └── 灯不亮 ──┘└── 灯亮3s ──────┘
+
+<span class="comment">// 问题：读取进行中（步骤2-3）灯不亮，读取完成后才亮</span>
+<span class="comment">// 应改为：读取开始时就亮（与写入灯对称）</span>
+    </div>
+
+    <h3>修改方案</h3>
+    <p>将 <code>S 读取指示灯</code> 从网络13移到网络12：</p>
+
+    <div class="code-block">
+<span class="label">网络12 修改 — 新增S读取指示灯</span>
+[步骤==2]──[TON T#3s]
+    │
+    ├─[R 写入指示灯]
+    ├─[S readbtn]
+    ├─<span class="add">[S 读取指示灯]</span>          <span class="add">← 从网络13移过来</span>
+    ├─[R Done]
+    └─[MOVE 3 → 步骤]
+
+<span class="label">网络13 修改 — 删除S读取指示灯</span>
+[步骤==3]──["FB_RFID_DB".Done]
+    │
+    ├─[R readbtn]
+    ├─[R Execute]
+    ├─<span class="del">[S 读取指示灯]</span>          <span class="del">← 删除（已移到网络12）</span>
+    ├─[R Done]                  <span class="comment">← 修复三新增</span>
+    ├─[MOVE 数据读取 → 读取正常产品1/2/3]
+    └─[MOVE 4 → 步骤]
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">修复后时序</div>
+      <p>读取指示灯在步骤2（readbtn置位、读取开始）时就亮，在步骤4（读取Done后3秒）时灭。与写入指示灯逻辑完全对称。</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 修复八 ===== -->
+<section id="fix8">
+  <div class="section-header"><h2>九、修复八：监控指示灯手动模式失效</h2></div>
+  <div class="section-body">
+
+    <h3>问题分析</h3>
+    <p>任务要求功能故障指示灯"包含在手动时"也有效，但FC5（含网络19-28的全部7个监控指示灯）<strong>只在自动模式被调用</strong>。手动模式下FC5不执行，所有监控指示灯停止更新。</p>
+
+    <h4>OB1中FC5的调用条件</h4>
+    <div class="code-block">
+<span class="label">OB1 网络2 — 当前调用结构</span>
+FC2:  [手动标识符]──[/自动标识符]──[/集成作业标识符]──[总开关按钮]    <span class="comment">// 仅手动模式</span>
+FC5:  [自动标识符]──[/手动标识符]──[/集成作业标识符]──[总开关按钮]    <span class="comment">// 仅自动模式</span>
+FC9:  [自动标识符]──[/手动标识符]──[/集成作业标识符]──[总开关按钮]    <span class="comment">// 仅自动模式</span>
+FC6:  [集成作业标识符]──[/手动标识符]──[/自动标识符]──[总开关按钮]   <span class="comment">// 仅集成模式</span>
+FC3:  [手动标识符]──[/自动读写rfid]                                   <span class="comment">// 仅手动模式</span>
+
+<span class="comment">// FC5只在 自动标识符=1 时调用</span>
+<span class="comment">// 手动模式下FC5不执行 → 7个监控指示灯不更新</span>
+    </div>
+
+    <h4>受影响的7个监控指示灯</h4>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:50px">网络</th><th>指示灯名称</th><th style="width:100px">手动模式</th></tr></thead>
+      <tbody>
+        <tr><td>20-21</td><td>自动扫码指示灯</td><td><span class="tag tag-critical">不更新</span></td></tr>
+        <tr><td>22</td><td>伺服加工正常件指示灯</td><td><span class="tag tag-critical">不更新</span></td></tr>
+        <tr><td>23</td><td>扫码次数预警指示灯</td><td><span class="tag tag-critical">不更新</span></td></tr>
+        <tr><td>24</td><td>功能故障指示灯</td><td><span class="tag tag-critical">不更新</span></td></tr>
+        <tr><td>25</td><td>自动读写指示灯</td><td><span class="tag tag-critical">不更新</span></td></tr>
+        <tr><td>26</td><td>均为正常件指示灯</td><td><span class="tag tag-critical">不更新</span></td></tr>
+        <tr><td>27-28</td><td>未读取到正常件指示灯</td><td><span class="tag tag-critical">不更新</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">任务要求冲突</div>
+      <p>任务要求功能故障指示灯"自动扫码所涉及的所有设备暂停时<strong>（包含在手动时）</strong>，该灯亮"。但FC5只在自动模式调用，手动模式下该灯不会更新，违反任务要求。</p>
+    </div>
+
+    <h3>修改方案</h3>
+
+    <h4>方案A（推荐）：新建FC10，将监控指示灯独立出来</h4>
+    <p>将FC5网络19-28移至新的FC10，在OB1中无条件调用（或仅受总开关按钮控制）：</p>
+    <div class="code-block">
+<span class="label">OB1 修改 — 新增FC10无条件调用</span>
+<span class="add">FC10: [总开关按钮]    // 所有模式都调用</span>
+
+<span class="comment">// FC5保留扫码枪逻辑（网络1-18）</span>
+<span class="comment">// FC10包含监控指示灯逻辑（原FC5网络19-28）</span>
+    </div>
+
+    <h4>方案B（简单）：FC5在所有模式都调用</h4>
+    <p>修改OB1中FC5的调用条件，去掉模式判断：</p>
+    <div class="code-block">
+<span class="label">OB1 修改 — FC5调用条件改为所有模式</span>
+<span class="del">FC5: [自动标识符]──[/手动标识符]──[/集成作业标识符]──[总开关按钮]</span>
+<span class="add">FC5: [总开关按钮]    <span class="comment">// 去掉模式条件，所有模式都调用</span></span>
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-title">方案B注意事项</div>
+      <p>如果FC5的网络1-18（扫码枪逻辑）在手动模式不该执行，需要将网络1-18和19-28拆分到不同FC。否则方案B可能导致手动模式下扫码枪逻辑也被执行。</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 修复后流程 ===== -->
+<section id="flow">
+  <div class="section-header"><h2>十、修复后完整执行流程</h2></div>
+  <div class="section-body">
+
+    <p>以下是所有修复应用后的FC9完整步骤流程图：</p>
+
+    <pre class="mermaid">
+flowchart TD
+    START["P 自动读写rfid<br/>步骤=0, 产品计数=0, 补足计数=0"] --> S0
+
+    S0{"步骤0<br/>产品计数 < 3?"}
+    S0 -- "有工位 > 0.0" --> S0A["选第一个正常件<br/>MOVE → 数据写入<br/>S writebtn, 步骤→1"]
+    S0 -- "全 ≤ 0.0" --> S0B["补足 1001/1002/1003<br/>S writebtn, 步骤→1"]
+    S0 -- "产品计数 ≥ 3" --> END
+
+    S0A --> S1
+    S0B --> S1
+
+    S1["步骤1: 等待写入Done<br/>R writebtn, R Execute, R Done<br/>清零已写工位, 步骤→2"]
+    S1 --> S2
+
+    S2["步骤2: 等3秒<br/>R写入指示灯, R Done<br/>S readbtn, 步骤→3"]
+    S2 --> S3
+
+    S3["步骤3: 等待读取Done<br/>R readbtn, R Execute, R Done<br/>S读取指示灯, 存储产品数据, 步骤→4"]
+    S3 --> S4
+
+    S4["步骤4: 等3秒<br/>R读取指示灯, INC产品计数<br/>R Done, 步骤→0"]
+    S4 --> S0
+
+    END["结束<br/>R自动读写rfid, R指示灯<br/>步骤→0"]
+
+    style START fill:#0b5394,color:#fff
+    style END fill:#cc0000,color:#fff
+    style S0A fill:#38761d,color:#fff
+    style S0B fill:#e69138,color:#fff
+    style S1 fill:#e3f2fd,color:#0b5394
+    style S2 fill:#e3f2fd,color:#0b5394
+    style S3 fill:#e3f2fd,color:#0b5394
+    style S4 fill:#e3f2fd,color:#0b5394
+    </pre>
+
+    <h3>暂停行为</h3>
+    <div class="callout callout-info">
+      <div class="callout-title">暂停时</div>
+      <p>用户按暂停按钮 → <code>自动rfid暂停标志</code> 置位 → 所有步骤转换条件不满足 → 步骤冻结在当前位置 → 当前RFID操作正常完成 → 恢复后从当前步骤继续。</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 优先级 ===== -->
+<section id="priority">
+  <div class="section-header"><h2>十一、修改优先级建议</h2></div>
+  <div class="section-body">
+
+    <p>如果时间有限，建议按以下优先级依次修改：</p>
+
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:60px">优先级</th>
+          <th>修复项</th>
+          <th>解决问题</th>
+          <th style="width:100px">改动量</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-critical">P0</span></td>
+          <td><a href="#fix2">修复二：网络9互斥条件</a></td>
+          <td>直接解决"不会一个个写入"</td>
+          <td>小</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-critical">P1</span></td>
+          <td><a href="#fix1">修复一：架构重构</a></td>
+          <td>解决约束违规</td>
+          <td>大</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-medium">P2</span></td>
+          <td><a href="#fix3">修复三：网络13补R Done</a></td>
+          <td>小改动，规范化</td>
+          <td>极小</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-medium">P3</span></td>
+          <td><a href="#fix4">修复四：暂停逻辑</a></td>
+          <td>防止死锁</td>
+          <td>中</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-low">P4</span></td>
+          <td><a href="#fix5">修复五：补足逻辑确认</a></td>
+          <td>验证逻辑正确</td>
+          <td>无改动</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-critical">P0</span></td>
+          <td><a href="#fix6">修复六：闪烁灯不闪烁</a></td>
+          <td>S/R改为=赋值，解决常亮</td>
+          <td>极小</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-medium">P2</span></td>
+          <td><a href="#fix7">修复七：读取灯时机</a></td>
+          <td>S读取指示灯从网络13移到12</td>
+          <td>小</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-critical">P1</span></td>
+          <td><a href="#fix8">修复八：监控灯手动失效</a></td>
+          <td>FC5拆分或改调用条件</td>
+          <td>中</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-title">最小改动方案</div>
+      <p>如果不想做大改，建议<strong>优先做修复二 + 修复六</strong>：修复二解决"不会一个个写入"（网络9加互斥条件），修复六解决"闪烁灯不闪烁"（S改=）。这两个改动量都很小但解决最严重的功能问题。修复一（架构重构）和修复八（FC5拆分）涉及较多网络调整，可后续处理。</p>
+    </div>
+
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div class="container">
+    <p>FC9 自动模块RFID 修复方案 · 基于 TIA Portal PLC程序分析 · 2026-07-01</p>
+  </div>
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#e3f2fd',
+      primaryTextColor: '#0b5394',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#6b7280',
+      fontSize: '14px'
+    },
+    flowchart: {
+      htmlLabels: true,
+      curve: 'basis'
+    }
+  });
+</script>
+
+</body>
+</html>
